@@ -3,6 +3,7 @@
 # https://github.com/Nyr/openvpn-install
 #
 # Copyright (c) 2013 Nyr. Released under the MIT License.
+set -eu
 
 
 # Detect Debian users running the script with "sh" instead of bash
@@ -130,6 +131,7 @@ new_client () {
     #     [[ -z "$ip_number" ]] && ip_number="1"
     #     ip=$(ip -4 addr | grep inet | grep -vE '127(\.[0-9]{1,3}){3}' | cut -d '/' -f 1 | grep -oE '[0-9]{1,3}(\.[0-9]{1,3}){3}' | sed -n "$ip_number"p)
     # fi
+    ip=$1
     # If $ip is a private IP address, the server must be behind NAT
     # if echo "$ip" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
     #     echo
@@ -144,6 +146,7 @@ new_client () {
     #     done
     #     [[ -z "$public_ip" ]] && public_ip="$get_public_ip"
     # fi
+    public_ip=`curl https://ipinfo.io/ip`
     # If system has a single IPv6, it is selected automatically
     # if [[ $(ip -6 addr | grep -c 'inet6 [23]') -eq 1 ]]; then
     #     ip6=$(ip -6 addr | grep 'inet6 [23]' | cut -d '/' -f 1 | grep -oE '([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}')
@@ -179,6 +182,7 @@ new_client () {
     #     protocol=tcp
     #     ;;
     # esac
+    protocol=udp
     # echo
     # echo "What port should OpenVPN listen to?"
     # read -p "Port [1194]: " port
@@ -187,6 +191,7 @@ new_client () {
     #     read -p "Port [1194]: " port
     # done
     # [[ -z "$port" ]] && port="1194"
+    port=1194
     # echo
     # echo "Select a DNS server for the clients:"
     # echo "   1) Current system resolvers"
@@ -206,6 +211,7 @@ new_client () {
     # Allow a limited set of characters to avoid conflicts
     # client=$(sed 's/[^0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-]/_/g' <<< "$unsanitized_client")
     # [[ -z "$client" ]] && client="client"
+    client=client
     # echo
     # echo "OpenVPN installation is ready to begin."
     # Install a firewall if firewalld or iptables are not already available
@@ -244,7 +250,7 @@ new_client () {
     # Get easy-rsa
     easy_rsa_url='https://github.com/OpenVPN/easy-rsa/releases/download/v3.1.7/EasyRSA-3.1.7.tgz'
     mkdir -p /etc/openvpn/server/easy-rsa/
-    { wget -qO- "$easy_rsa_url" 2>/dev/null || curl -sL "$easy_rsa_url" ; } | tar xz -C /etc/openvpn/server/easy-rsa/ --strip-components 1
+    curl -sSL "$easy_rsa_url" | tar xz -C /etc/openvpn/server/easy-rsa/ --strip-components 1
     chown -R root:root /etc/openvpn/server/easy-rsa/
     cd /etc/openvpn/server/easy-rsa/
     # Create the PKI, set up the CA and the server and client certificates
